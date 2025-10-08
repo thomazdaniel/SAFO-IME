@@ -73,7 +73,7 @@
             <div class="col-md-8">
                 <div class="card p-3 shadow-sm">
                     <label for="selectLinha" class="form-label fs-5">
-                        **1. Selecione Sua Linha de Pesquisa (Programas de Pós-Graduação)**
+                        <strong>1. Selecione Sua Linha de Pesquisa (Programas de Pós-Graduação)</strong>
                     </label>
                     <select id="selectLinha" class="form-select form-select-lg" onchange="carregarEditais()">
                         <option value="">-- Escolha uma Linha de Pesquisa --</option>
@@ -92,7 +92,7 @@
 
             <div class="col-md-4 d-grid gap-2">
                 <a href="#" class="btn btn-outline-primary btn-lg mt-4">
-                    **2. Inserir Novas Linhas de Pesquisa**
+                    <strong>2. Inserir Novas Linhas de Pesquisa</strong>
                 </a>
                 <small class="text-muted text-center">Incremento solicitado</small>
             </div>
@@ -108,7 +108,7 @@
         
         <div class="alert alert-warning d-none" id="alertaNotificacao" role="alert">
             <h4 class="alert-heading">Atenção!</h4>
-            <p>Você está navegando **sem fazer login**. Não receberá notificações por e-mail sobre novos editais. Clique em "Fazer Login" para ativar os alertas.</p>
+            <p>Você está navegando <strong>sem fazer login</strong>. Não receberá notificações por e-mail sobre novos editais. Clique em "Fazer Login" para ativar os alertas.</p>
         </div>
 
         <div class="table-responsive">
@@ -156,7 +156,7 @@
                 usuarioLogado = true;
                 loginModal.hide();
                 // Atualiza a interface para refletir o login
-                usuarioInfo.innerHTML = `Bem-vindo(a), ${email} | **Notificações ATIVAS**`;
+                usuarioInfo.innerHTML = `Bem-vindo(a), ${email} | <strong>Notificações ATIVAS</strong>`;
                 alertaNotificacao.classList.add('d-none');
                 document.getElementById('headerLoginLink').innerHTML = 'Sair'; // Altera o link para "Sair"
                 alert("Login efetuado com sucesso! Você receberá alertas por e-mail.");
@@ -170,7 +170,7 @@
             usuarioLogado = false;
             loginModal.hide();
             // Atualiza a interface para refletir o status
-            usuarioInfo.innerHTML = `Navegando como Visitante | **Notificações INATIVAS**`;
+            usuarioInfo.innerHTML = `Navegando como Visitante | <strong>Notificações INATIVAS</strong>`;
             alertaNotificacao.classList.remove('d-none'); // Mostra o alerta
             document.getElementById('headerLoginLink').innerHTML = 'Fazer Login'; // Mantém o link para fazer login
         }
@@ -257,5 +257,4 @@
         }
     </script>
 </body>
-
 </html>
