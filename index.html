@@ -11,7 +11,6 @@
             background-color: #f8f9fa;
         }
         .header-ime {
-            /* Cor azul IME/Marinha (exemplo) */
             background-color: #004d99; 
             color: white;
             padding: 20px 0;
@@ -25,11 +24,14 @@
             color: white;
             font-weight: bold;
             text-decoration: none;
-            /* Garante que o link apareça acima do modal, se estiver aberto */
             z-index: 1051; 
         }
         .login-link:hover {
             color: #ccc;
+        }
+        /* Classe para esconder vistas (Bootstrap helper) */
+        .view-hidden {
+            display: none !important;
         }
     </style>
 </head>
@@ -42,21 +44,53 @@
                     <h5 class="modal-title" id="loginModalLabel">Acesso ao SAFO</h5>
                 </div>
                 <div class="modal-body">
-                    <p>Para receber notificações automáticas sobre novos editais, faça login.</p>
-                    <form id="loginForm">
+                    
+                    <div id="login-view">
+                        <p>Para receber notificações automáticas sobre novos editais, faça login.</p>
+                        <form id="loginForm">
+                            <div class="mb-3">
+                                <label for="inputEmailLogin" class="form-label">E-mail</label>
+                                <input type="email" class="form-control" id="inputEmailLogin" placeholder="seu.nome@ime.br" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="inputPasswordLogin" class="form-label">Senha</label>
+                                <input type="password" class="form-control" id="inputPasswordLogin" required>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div id="cadastro-email-view" class="view-hidden">
+                        <h6 class="mb-3">Criação de Conta (1 de 3)</h6>
                         <div class="mb-3">
-                            <label for="inputEmail" class="form-label">E-mail</label>
-                            <input type="email" class="form-control" id="inputEmail" placeholder="seu.nome@ime.br" required>
+                            <label for="inputEmailCadastro" class="form-label">Email para Cadastro</label>
+                            <input type="email" class="form-control" id="inputEmailCadastro" placeholder="seu.novo.email@ime.br" required>
                         </div>
+                    </div>
+
+                    <div id="cadastro-senha-view" class="view-hidden">
+                        <h6 class="mb-3">Criação de Conta (2 de 3)</h6>
                         <div class="mb-3">
-                            <label for="inputPassword" class="form-label">Senha</label>
-                            <input type="password" class="form-control" id="inputPassword" required>
+                            <label for="inputNovaSenha" class="form-label">Nova Senha</label>
+                            <input type="password" class="form-control" id="inputNovaSenha" required>
+                            <small class="form-text text-muted">A senha deve ter mais de 4 caracteres, contendo apenas letras e números (sem caracteres especiais).</small>
                         </div>
-                    </form>
+                    </div>
+
+                    <div id="cadastro-confirmacao-view" class="view-hidden">
+                        <h6 class="mb-3">Criação de Conta (3 de 3)</h6>
+                        <div class="mb-3">
+                            <label for="inputConfirmaSenha" class="form-label">Confirmação da Senha</label>
+                            <input type="password" class="form-control" id="inputConfirmaSenha" required>
+                            <div id="senha-mismatch-alert" class="alert alert-danger mt-2 view-hidden">
+                                <strong>Erro!</strong> Os campos de senha estão diferentes.
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
                 <div class="modal-footer justify-content-between">
-                    <button type="button" class="btn btn-secondary" onclick="continuarSemLogin()">Continuar sem Login</button>
-                    <button type="button" class="btn btn-primary" onclick="fazerLogin()">Fazer Login</button>
+                    <button type="button" class="btn btn-secondary" id="btn-secundario" onclick="handleSecondaryAction()">Continuar sem Login</button>
+                    <button type="button" class="btn btn-primary" id="btn-primario" onclick="handlePrimaryAction()">Fazer Login</button>
                 </div>
             </div>
         </div>
@@ -132,52 +166,194 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-        // Variável de estado para simular o login
+        // -----------------------------------------------------
+        // Variáveis de Estado
+        // -----------------------------------------------------
         let usuarioLogado = false; 
+        let currentView = 'login';
+        const modalViews = ['login-view', 'cadastro-email-view', 'cadastro-senha-view', 'cadastro-confirmacao-view'];
 
-        // -----------------------------------------------------
-        // LÓGICA DO LOGIN
-        // -----------------------------------------------------
+        // Referências DOM
         const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
         const usuarioInfo = document.getElementById('usuarioInfo');
         const alertaNotificacao = document.getElementById('alertaNotificacao');
+        const btnSecundario = document.getElementById('btn-secundario');
+        const btnPrimario = document.getElementById('btn-primario');
 
-        // Exibe o modal assim que a página é carregada
-        window.onload = function() {
-            loginModal.show();
+        // Dados de Cadastro Temporários
+        let novoEmail = '';
+        let novaSenha = '';
+
+        // -----------------------------------------------------
+        // LÓGICA DE EXIBIÇÃO DE VISTAS (Views)
+        // -----------------------------------------------------
+        function showView(viewId) {
+            modalViews.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.classList.add('view-hidden');
+                }
+            });
+            document.getElementById(viewId).classList.remove('view-hidden');
+            currentView = viewId.replace('-view', '');
+            updateModalButtons();
         }
 
-        function fazerLogin() {
-            // No sistema real, você enviaria o e-mail/senha para o servidor aqui.
-            const email = document.getElementById('inputEmail').value;
+        function updateModalButtons() {
+            // Reinicia o estado
+            btnSecundario.classList.remove('d-none');
+            btnPrimario.classList.remove('d-none');
+            document.getElementById('senha-mismatch-alert').classList.add('view-hidden');
+
+            // Define ações e textos com base na vista atual
+            switch (currentView) {
+                case 'login':
+                    btnSecundario.textContent = 'Criar Conta';
+                    btnSecundario.onclick = () => showView('cadastro-email-view');
+                    btnPrimario.textContent = 'Fazer Login';
+                    btnPrimario.onclick = fazerLogin;
+                    break;
+                case 'cadastro-email':
+                    btnSecundario.textContent = 'Voltar';
+                    btnSecundario.onclick = () => showView('login-view');
+                    btnPrimario.textContent = 'Próximo';
+                    btnPrimario.onclick = validarEmail;
+                    break;
+                case 'cadastro-senha':
+                    btnSecundario.textContent = 'Voltar';
+                    btnSecundario.onclick = () => showView('cadastro-email-view');
+                    btnPrimario.textContent = 'Próximo';
+                    btnPrimario.onclick = validarNovaSenha;
+                    break;
+                case 'cadastro-confirmacao':
+                    btnSecundario.textContent = 'Voltar';
+                    btnSecundario.onclick = () => showView('cadastro-senha-view');
+                    btnPrimario.textContent = 'Criar Conta';
+                    btnPrimario.onclick = validarConfirmacao;
+                    break;
+            }
+        }
+
+        // -----------------------------------------------------
+        // LÓGICA DE CADASTRO E VALIDAÇÃO
+        // -----------------------------------------------------
+        
+        function validarEmail() {
+            const email = document.getElementById('inputEmailCadastro').value;
+            if (email.length > 5 && email.includes('@')) {
+                novoEmail = email;
+                showView('cadastro-senha-view');
+            } else {
+                alert('Por favor, insira um e-mail válido para continuar.');
+            }
+        }
+
+        function validarNovaSenha() {
+            const senha = document.getElementById('inputNovaSenha').value;
             
-            // Simulação de login bem-sucedido
-            if (email) {
+            // Requisito 5: Senha deve ter mais de 4 caracteres, apenas letras e números.
+            const regex = /^[a-zA-Z0-9]{5,}$/; 
+
+            if (regex.test(senha)) {
+                novaSenha = senha;
+                showView('cadastro-confirmacao-view');
+            } else {
+                alert('A senha deve ter mais de 4 caracteres e conter apenas letras (maiúsculas/minúsculas) e números. Por favor, tente novamente.');
+            }
+        }
+
+        function validarConfirmacao() {
+            const confirmacao = document.getElementById('inputConfirmaSenha').value;
+            const alerta = document.getElementById('senha-mismatch-alert');
+
+            // Requisito 4: Comparação de senhas
+            if (confirmacao !== novaSenha) {
+                alerta.classList.remove('view-hidden');
+                document.getElementById('inputConfirmaSenha').focus(); // Foca o usuário no campo de erro
+            } else {
+                alerta.classList.add('view-hidden');
+                // Se as senhas baterem, completa o cadastro
+                criarConta();
+            }
+        }
+
+        function criarConta() {
+            // AQUI O CÓDIGO REAL ENVIARIA novoEmail E novaSenha PARA O BACKEND
+            
+            alert(`Conta criada com sucesso para: ${novoEmail}! Por favor, faça login.`);
+            // Limpa e retorna para a tela de login
+            document.getElementById('inputEmailLogin').value = novoEmail;
+            document.getElementById('inputPasswordLogin').value = '';
+            showView('login-view');
+        }
+
+        // -----------------------------------------------------
+        // LÓGICA DE LOGIN SIMULADO (MANTIDA)
+        // -----------------------------------------------------
+        function fazerLogin() {
+            const email = document.getElementById('inputEmailLogin').value;
+            const senha = document.getElementById('inputPasswordLogin').value;
+
+            // Simulação de autenticação (no sistema real, o backend faria isso)
+            if (email && senha) {
                 usuarioLogado = true;
                 loginModal.hide();
-                // Atualiza a interface para refletir o login
                 usuarioInfo.innerHTML = `Bem-vindo(a), ${email} | <strong>Notificações ATIVAS</strong>`;
                 alertaNotificacao.classList.add('d-none');
-                document.getElementById('headerLoginLink').innerHTML = 'Sair'; // Altera o link para "Sair"
+                document.getElementById('headerLoginLink').onclick = fazerLogout; // Define a função de logout
+                document.getElementById('headerLoginLink').textContent = 'Sair';
                 alert("Login efetuado com sucesso! Você receberá alertas por e-mail.");
-
             } else {
-                alert("Por favor, preencha o campo de e-mail.");
+                alert("Por favor, preencha E-mail e Senha para fazer login.");
             }
+        }
+        
+        function fazerLogout() {
+             usuarioLogado = false;
+             usuarioInfo.innerHTML = `Navegando como Visitante | <strong>Notificações INATIVAS</strong>`;
+             document.getElementById('headerLoginLink').onclick = () => loginModal.show(); // Volta a abrir o modal
+             document.getElementById('headerLoginLink').textContent = 'Fazer Login';
+             alertaNotificacao.classList.remove('d-none');
+             showView('login-view'); // Garante que a tela de login seja a padrão
+             alert("Você saiu do sistema.");
+        }
+
+        function handleSecondaryAction() {
+            // Esta função lida com o botão "Continuar sem Login" apenas na tela de login
+            if (currentView === 'login') {
+                continuarSemLogin();
+            } else {
+                // Para as telas de cadastro, esta função é "Voltar" (já tratada em updateModalButtons)
+            }
+        }
+
+        function handlePrimaryAction() {
+             // Esta função lida com as ações primárias (Login, Próximo, Criar Conta)
+             if (currentView === 'login') {
+                 fazerLogin();
+             } else if (currentView === 'cadastro-email') {
+                 validarEmail();
+             } else if (currentView === 'cadastro-senha') {
+                 validarNovaSenha();
+             } else if (currentView === 'cadastro-confirmacao') {
+                 validarConfirmacao();
+             }
         }
 
         function continuarSemLogin() {
             usuarioLogado = false;
             loginModal.hide();
-            // Atualiza a interface para refletir o status
             usuarioInfo.innerHTML = `Navegando como Visitante | <strong>Notificações INATIVAS</strong>`;
-            alertaNotificacao.classList.remove('d-none'); // Mostra o alerta
-            document.getElementById('headerLoginLink').innerHTML = 'Fazer Login'; // Mantém o link para fazer login
+            alertaNotificacao.classList.remove('d-none');
+            document.getElementById('headerLoginLink').onclick = () => loginModal.show();
+            document.getElementById('headerLoginLink').textContent = 'Fazer Login';
         }
         
         // -----------------------------------------------------
-        // LÓGICA DE CARREGAMENTO DE EDITAIS (MANTIDA)
+        // INICIALIZAÇÃO E DADOS DA PÁGINA (MANTIDO)
         // -----------------------------------------------------
+        
+        // Dados e funções de carregar editais... (Mesmas do código anterior)
         const dadosEditais = {
             cartografica: [
                 { nome: "Fomento em Geoprocessamento 2026", agencia: "CNPq", data: "01/11/2025", score: 93 },
@@ -232,7 +408,6 @@
 
             let editais = dadosEditais[linhaSelecionada] || [];
 
-            // GARANTIR A ORDENAÇÃO POR RELEVÂNCIA (Do maior score para o menor)
             editais.sort((a, b) => b.score - a.score);
 
             if (editais.length === 0) {
